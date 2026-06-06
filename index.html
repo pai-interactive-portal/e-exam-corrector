@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Exam Corrector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --success-hover: #059669;
+            --secondary: #64748b;
+            --secondary-hover: #475569;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --transition: all 0.25s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 { font-size: 42px; font-weight: 800; color: #0f172a; text-align: center; margin-bottom: 8px; letter-spacing: -1px; }
+        .subtitle { text-align: left; color: var(--text-muted); margin-bottom: 32px; font-size: 15px; }
+        
+        /* Step Indicator / Wizard Progress */
+        .steps-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            gap: 16px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+        .step.active {
+            background: #e0e7ff;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .step-num {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: currentColor;
+            color: var(--surface);
+            font-size: 12px;
+        }
+        .step-divider {
+            width: 40px;
+            height: 2px;
+            background: var(--border);
+        }
+
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.4s ease forwards; }
+
+        /* UI Form Components */
+        .setup-control {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        label { font-weight: 500; font-size: 14px; }
+        
+        select, input[type="number"], input[type="text"] {
+            font-family: inherit;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            transition: var(--transition);
+            background-color: var(--surface);
+        }
+        select:focus, input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-success { background: var(--success); color: white; width: 100%; padding: 14px; font-size: 16px; }
+        .btn-success:hover { background: var(--success-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        /* Dynamic Rows & Cards */
+        .row-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 80px 200px 1fr;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+        }
+        .row-item:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); }
+
+        .row-koreksi {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Interactive Options Groups */
+        .opt-grp { display: flex; gap: 6px; }
+        .btn-opt {
+            min-width: 44px;
+            height: 38px;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: var(--transition);
+            color: #475569;
+        }
+        .btn-opt:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn-opt.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-opt.selected-multi { background: #7c3aed; color: white; border-color: #7c3aed; }
+
+        /* Jodohkan Box Specifics */
+        .jodoh-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .jodoh-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            background: #f8fafc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .jodoh-box select { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; }
+
+        /* Student Metadata Container */
+        .meta-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .meta-box div { display: flex; flex-direction: column; gap: 6px; }
+        .meta-box input { width: 90%; }
+
+        /* Score Display / Result Box */
+        #result-box {
+            background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%);
+            border: 1px solid #fef08a;
+            padding: 28px;
+            border-radius: var(--radius);
+            margin-top: 32px;
+            display: none;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .result-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+        .score-big {
+            font-size: 54px;
+            font-weight: 800;
+            color: #047857;
+            line-height: 1;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .row-item { grid-template-columns: 1fr; gap: 8px; }
+            .row-koreksi { flex-direction: column; align-items: flex-start; }
+            .meta-box { grid-template-columns: 1fr; }
+        }
+        
+        .app-footer {
+            text-align: center;
+            margin-top: 35px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .app-footer strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="section-welcome" class="section active" style="text-align: center; padding: 10px 0;">
+        <h1>E-EXAM CORRECTOR</h1>
+        <div style="height: 4px; width: 140px; background: linear-gradient(90deg, var(--primary), #818cf8); margin: 20px auto; border-radius: 4px;"></div>
+        
+        <div class="subtitle" style="background: #f8fafc; padding: 25px; border-radius: var(--radius); border: 1px solid var(--border); margin: 30px 0; text-align: left; line-height: 1.6;">
+            <strong style="font-size: 16px; color: #0f172a; display: block; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Instruksi Penggunaan:</strong>
+            <p style="margin: 0 0 15px 0;">
+                Pertama, rancang terlebih dahulu kunci jawaban dengan cara:<br>
+				- Klik tombol <strong>Mulai</strong> di bawah.<br>
+                - Tentukan jumlah butir soal, lalu tekan tombol <strong>Buat Rancangan</strong>.<br>
+				- Sesuaikan bentuk soal, kunci jawaban, dan bobot skor.<br>
+				- Klik tombol <strong>Simpan Kunci Jawaban</strong>.
+            </p>
+            <p style="margin: 0;">
+                Kedua, koreksi lembar jawaban dengan cara:<br>
+                - Masukkan nomor absen dan nama lengkap siswa yang akan diperiksa.<br>
+				- Sesuaikan jawaban yang dipilih siswa, lalu klik tombol <strong>Periksa dan Hitung Nilai</strong>.<br>
+				- Klik tombol <strong>Simpan Data</strong> untuk menyimpan hasil penilaian pada tabel rekapitulasi.<br>
+				- Klik tombol <strong>Bersihkan Data</strong> untuk mengolah data baru.
+            </p>
+        </div>
+        
+        <button class="btn btn-primary" style="padding: 14px 45px; font-size: 16px; font-weight: 700; width: auto; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);" onclick="mulaiAplikasi()">
+            🚀 Mulai
+        </button>
+    </div>
+
+    <div id="steps-indicator" class="steps-container" style="display: none;">
+        <div id="step-1" class="step active"><span class="step-num">1</span>Rancangan Kunci Jawaban</div>
+        <div class="step-divider"></div>
+        <div id="step-2" class="step"><span class="step-num">2</span>Koreksi Lembar Jawaban</div>
+    </div>
+    
+    <div id="section-setup" class="section">
+        <h3 style="margin-top: 0; font-size: 20px; font-weight: 700; color: #0f172a;">🛠️ Kunci Jawaban</h3>
+        <div class="setup-control">
+            <label for="input-jumlah-soal">Jumlah Butir Soal:</label>
+            <input type="number" id="input-jumlah-soal" value="10" min="1" max="100" style="width: 70px; text-align: center;">
+            <button class="btn btn-primary" onclick="buatTemplateSoal()">Buat Rancangan</button>
+        </div>
+        
+        <div id="daftar-soal-setup"></div>
+        
+        <div style="margin-top: 32px;">
+            <button class="btn btn-success" onclick="kunciKonfigurasi()">Simpan Kunci Jawaban</button>
+        </div>
+    </div>
+	
+    <div id="section-koreksi" class="section">
+	<h3 style="margin-top: 0; font-size: 20px; font-weight: 700; color: #0f172a;">📋 Lembar Jawaban</h3>
+       
+        
+        <div class="meta-box">
+            <div>
+                <label>No. Absen:</label>
+                <input type="text" id="siswa-absen" placeholder="-">
+            </div>
+			<div>
+                <label>Nama Lengkap:</label>
+                <input type="text" id="siswa-nama" placeholder="-">
+            </div>
+        </div>
+
+        <div id="daftar-soal-koreksi"></div>
+
+        <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn btn-secondary" onclick="kembaliKeSetup()">Ubah Kunci Jawaban</button>
+			<button class="btn btn-success" onclick="prosesNilaiSiswa()">Periksa dan Hitung Nilai</button>
+            <button class="btn btn-secondary" onclick="resetFormKoreksi()">Bersihkan Data</button>
+			
+        </div>
+
+        <div id="result-box">
+            <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700; color: #854d0e; text-align: center;">Lembar Hasil Ujian</h3>
+            <p style="margin: 0; font-size: 14px; color: #713f12;"><strong>No. Absen:</strong> <span id="res-absen">-</span></p>
+			<p style="margin: 0; font-size: 14px; color: #713f12;"><strong>Nama Lengkap:</strong> <span id="res-nama">-</span></p>
+                        
+            <div class="result-card">
+                <div style="font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+                    <div>Skor Perolehan: <strong id="res-skor-perolehan" style="color:var(--text-main);">0</strong></div>
+                    <div>Skor Maksimal: <strong id="res-skor-max" style="color:var(--text-main);">0</strong></div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; letter-spacing: 0.08em;">Nilai Akhir:</span>
+                    <span class="score-big" id="res-nilai-akhir">0</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+                <button class="btn btn-primary" onclick="tambahKeRiwayat()" style="background: #2563eb; flex: 2;">Simpan Data</button>
+                <button class="btn btn-secondary" onclick="cetakHasilSiswa()" style="flex: 1;">Cetak</button>
+            </div>
+        </div>
+
+        <div id="riwayat-box" style="margin-top: 40px; display: none; background: var(--surface); padding: 24px; border: 1px solid var(--border); border-radius: var(--radius);">
+            <h3 style="font-size: 18px; font-weight: 700; margin-top: 0; margin-bottom: 16px; color: #0f172a; text-align: center;">Rekapitulasi Hasil Ujian</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid var(--border); color: var(--text-muted);">
+                            <th style="padding: 12px 10px; text-align: left;">No. Absen</th>
+							<th style="padding: 12px 10px; text-align: left;">Nama Siswa</th>
+                            <th style="padding: 12px 10px; text-align: center;">Skor Perolehan</th>
+                            <th style="padding: 12px 10px; text-align: center;">Skor Maksimal</th>
+                            <th style="padding: 12px 10px; text-align: center;">Nilai Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-riwayat"></tbody>
+                </table>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="unduhExcel()" style="background: #16a34a;">⬇️ Unduh (CSV)</button>
+                <button class="btn btn-primary" onclick="unduhPDF()" style="background: #e11d48;">🖨️ Cetak (PDF)</button>
+                <button class="btn btn-secondary" onclick="kosongkanRiwayat()" style="margin-left: auto;">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-footer">
+        Dibuat oleh: <br><strong>Dede Ardi Hikmatulloh, S.Th.I</strong><br>© 2025 – Portal PAI Dasar
+    </div>	
+</div>
+
+<script>
+    let riwayatKoreksi = [];
+	let konfigurasiSoal = [];
+    let jawabanSiswa = {};
+	
+    // Alur 1: Membuka Aplikasi & Menampilkan Layout Pembuka Kunci Soal
+    function mulaiAplikasi() {
+        document.getElementById('section-welcome').classList.remove('active');
+        document.getElementById('steps-indicator').style.display = 'flex';
+        document.getElementById('section-setup').classList.add('active');
+        buatTemplateSoal(); // Menyiapkan template default (10 butir)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function buatTemplateSoal() {
+        const jml = parseInt(document.getElementById('input-jumlah-soal').value) || 0;
+        const container = document.getElementById('daftar-soal-setup');
+        container.innerHTML = '';
+        
+        for (let i = 1; i <= jml; i++) {
+            let row = document.createElement('div');
+            row.className = 'row-item';
+            row.innerHTML = `
+                <div><span style="font-weight:700; color: var(--text-muted);">No. ${i}</span></div>
+                <div>
+                    <select id="type-${i}" onchange="gantiTipeSoalUI(${i})" style="width:100%;">
+                        <option value="PG">Pilihan Ganda</option>
+                        <option value="PGK">Pilihan Ganda Kompleks</option>
+                        <option value="BS">Benar-Salah</option>
+                        <option value="MJ">Menjodohkan</option>
+                        <option value="IS">Isian Singkat</option>
+                        <option value="UR">Uraian</option>
+                    </select>
+                </div>
+                <div id="key-container-${i}">
+                    Kunci: <select id="key-${i}"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select>
+                    | Skor: <input type="number" id="skor-${i}" value="1" style="width:40px; text-align:center;">
+                </div>
+            `;
+            container.appendChild(row);
+        }
+    }
+
+    function gantiTipeSoalUI(num) {
+        const tipe = document.getElementById(`type-${num}`).value;
+        const container = document.getElementById(`key-container-${num}`);
+        
+        if (tipe === 'PG') {
+            container.innerHTML = `Kunci: <select id="key-${num}"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select> | Skor: <input type="number" id="skor-${num}" value="1" style="width:40px; text-align:center;">`;
+        } else if (tipe === 'PGK') {
+            container.innerHTML = `Kunci: 
+                <label style="margin-right:4px;"><input type="checkbox" name="key-${num}" value="A"> A</label>
+                <label style="margin-right:4px;"><input type="checkbox" name="key-${num}" value="B"> B</label>
+                <label style="margin-right:4px;"><input type="checkbox" name="key-${num}" value="C"> C</label>
+                <label style="margin-right:4px;"><input type="checkbox" name="key-${num}" value="D"> D</label>
+				<label style="margin-right:8px;"><input type="checkbox" name="key-${num}" value="E"> E</label> 				
+                | Skor: <input type="number" id="skor-${num}" value="2" style="width:40px; text-align:center;">`;
+        } else if (tipe === 'BS') {
+            container.innerHTML = `Kunci: <select id="key-${num}"><option value="B">Benar (V)</option><option value="S">Salah (X)</option></select> | Skor: <input type="number" id="skor-${num}" value="1" style="width:40px; text-align:center;">`;
+        } else if (tipe === 'MJ') {
+            container.innerHTML = `
+                Pasangan: <input type="number" id="jodoh-qty-${num}" value="4" min="1" max="10" style="width:40px; text-align:center;" onchange="renderOpsiMenjodohkanMaster(${num})">
+                | Skor per pasang: <input type="number" id="skor-${num}" value="1" style="width:40px; text-align:center;" onchange="renderOpsiMenjodohkanMaster(${num})">
+                <span id="info-max-skor-${num}" style="margin-left:8px; font-weight:600; color:var(--success); font-size:13px;">(Maks: 4)</span>
+                <div id="jodoh-keys-list-${num}" class="jodoh-wrap"></div>
+            `;
+            renderOpsiMenjodohkanMaster(num);
+        } else if (tipe === 'IS') {
+            container.innerHTML = `Skor Maksimal: <input type="number" id="skor-${num}" value="2" style="width:45px; text-align:center;">`;
+        } else if (tipe === 'UR') {
+            container.innerHTML = `Skor Maksimal: <input type="number" id="skor-${num}" value="3" style="width:45px; text-align:center;">`;
+        }
+    }
+
+    function renderOpsiMenjodohkanMaster(num) {
+        const qty = parseInt(document.getElementById(`jodoh-qty-${num}`).value) || 1;
+        const skorPerBaris = parseInt(document.getElementById(`skor-${num}`).value) || 1;
+        const listContainer = document.getElementById(`jodoh-keys-list-${num}`);
+        
+        document.getElementById(`info-max-skor-${num}`).innerText = `(Maks: ${qty * skorPerBaris})`;
+        
+        listContainer.innerHTML = '';
+        for(let p = 1; p <= qty; p++) {
+            listContainer.innerHTML += `
+                <div class="jodoh-box">
+                    ${p} &rarr; 
+                    <select id="key-${num}-${p}">
+                        <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option>
+                    </select>
+                </div>
+            `;
+        }
+    }
+
+    // Alur 2: Mengunci Konfigurasi dan Otomatis Mengalihkan ke Halaman Pemeriksaan Nilai
+    function kunciKonfigurasi() {
+        const jml = parseInt(document.getElementById('input-jumlah-soal').value) || 0;
+        if(jml === 0) return alert('Silakan, tentukan rancangan kunci jawaban terlebih dahulu!');
+        
+        konfigurasiSoal = [];
+        const containerKoreksi = document.getElementById('daftar-soal-koreksi');
+        containerKoreksi.innerHTML = '';
+
+        for (let i = 1; i <= jml; i++) {
+            const tipe = document.getElementById(`type-${i}`).value;
+            let targetKunci = "";
+            let bobotSkor = 1;
+            let ekstraData = {};
+
+            if (tipe === 'PG' || tipe === 'BS') {
+                targetKunci = document.getElementById(`key-${i}`).value;
+                bobotSkor = parseInt(document.getElementById(`skor-${i}`).value) || 1;
+            } else if (tipe === 'PGK') {
+                let checkedBoxes = document.querySelectorAll(`input[name="key-${i}"]:checked`);
+                targetKunci = Array.from(checkedBoxes).map(cb => cb.value);
+                bobotSkor = parseInt(document.getElementById(`skor-${i}`).value) || 1;
+            } else if (tipe === 'MJ') {
+                const qty = parseInt(document.getElementById(`jodoh-qty-${i}`).value) || 1;
+                targetKunci = [];
+                for (let p = 1; p <= qty; p++) {
+                    targetKunci.push(document.getElementById(`key-${i}-${p}`).value);
+                }
+                let skorPerBaris = parseInt(document.getElementById(`skor-${i}`).value) || 1;
+                bobotSkor = skorPerBaris * qty; 
+                ekstraData.skorPerBaris = skorPerBaris;
+                ekstraData.qty = qty;
+            } else if (tipe === 'IS' || tipe === 'UR') {
+                bobotSkor = parseInt(document.getElementById(`skor-${i}`).value) || 1;
+            }
+
+            konfigurasiSoal.push({ nomor: i, tipe: tipe, kunci: targetKunci, maxSkor: bobotSkor, ekstra: ekstraData });
+
+            let row = document.createElement('div');
+            row.className = 'row-koreksi';
+            
+            let badgeColor = tipe === 'MJ' ? '#7c3aed' : (tipe === 'UR' || tipe === 'IS' ? '#ea580c' : '#4f46e5');
+            let htmlKonten = `
+                <div>
+                    <div style="font-weight:700;">Soal Nomor ${i}</div>
+                    <span style="font-size:11px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:4px; font-weight:500;">
+                        ${tipe === 'MJ' ? 'Menjodohkan (' + ekstraData.qty + ' P)' : tipe}
+                    </span>
+                </div>
+            `;
+            
+            if (tipe === 'PG') {
+                htmlKonten += `<div class="opt-grp" data-q="${i}"><button class="btn-opt" onclick="setSingleInput(this, 'A')">A</button><button class="btn-opt" onclick="setSingleInput(this, 'B')">B</button><button class="btn-opt" onclick="setSingleInput(this, 'C')">C</button><button class="btn-opt" onclick="setSingleInput(this, 'D')">D</button><button class="btn-opt" onclick="setSingleInput(this, 'E')">E</button></div>`;
+            } else if (tipe === 'BS') {
+                htmlKonten += `<div class="opt-grp" data-q="${i}"><button class="btn-opt" onclick="setSingleInput(this, 'B')">B</button><button class="btn-opt" onclick="setSingleInput(this, 'S')">S</button></div>`;
+            } else if (tipe === 'PGK') {
+                htmlKonten += `<div class="opt-grp" data-q="${i}"><button class="btn-opt" onclick="toggleMultiInput(this, 'A')">A</button><button class="btn-opt" onclick="toggleMultiInput(this, 'B')">B</button><button class="btn-opt" onclick="toggleMultiInput(this, 'C')">C</button><button class="btn-opt" onclick="toggleMultiInput(this, 'D')">D</button><button class="btn-opt" onclick="toggleMultiInput(this, 'E')">E</button></div>`;
+            } else if (tipe === 'MJ') {
+                let htmlKoreksiJodoh = `<div class="jodoh-wrap" style="justify-content: flex-end;">`;
+                for(let p = 1; p <= ekstraData.qty; p++) {
+                    htmlKoreksiJodoh += `<div><span style="font-size:12px; font-weight:600; color:var(--text-muted);">${p}:</span> <select id="ans-${i}-${p}"><option value="">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select></div>`;
+                }
+                htmlKoreksiJodoh += `</div>`;
+                htmlKonten += htmlKoreksiJodoh;
+            } else if (tipe === 'IS' || tipe === 'UR') {
+                let tombolSkorHtml = `<div class="opt-grp" data-q="${i}">`;
+                for(let s = 0; s <= bobotSkor; s++) {
+                    tombolSkorHtml += `<button class="btn-opt" onclick="setManualScoreInput(this, ${s})">+${s}</button>`;
+                }
+                tombolSkorHtml += `</div>`;
+                htmlKonten += tombolSkorHtml;
+            }
+
+            row.innerHTML = htmlKonten;
+            containerKoreksi.appendChild(row);
+        }
+
+        // Jalankan Alur perpindahan layout
+        document.getElementById('step-1').classList.remove('active');
+        document.getElementById('step-2').classList.add('active');
+        document.getElementById('section-setup').classList.remove('active');
+        document.getElementById('section-koreksi').classList.add('active');
+        jawabanSiswa = {}; 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setSingleInput(btn, nilai) {
+        let parent = btn.parentElement;
+        let qNum = parent.getAttribute('data-q');
+        parent.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        jawabanSiswa[qNum] = nilai;
+    }
+
+    function toggleMultiInput(btn, nilai) {
+        let parent = btn.parentElement;
+        let qNum = parent.getAttribute('data-q');
+        btn.classList.toggle('selected-multi');
+        if (!jawabanSiswa[qNum]) jawabanSiswa[qNum] = [];
+        let index = jawabanSiswa[qNum].indexOf(nilai);
+        if (index > -1) jawabanSiswa[qNum].splice(index, 1);
+        else jawabanSiswa[qNum].push(nilai);
+    }
+
+    function setManualScoreInput(btn, skorPoin) {
+        let parent = btn.parentElement;
+        let qNum = parent.getAttribute('data-q');
+        parent.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        jawabanSiswa[qNum] = skorPoin;
+    }
+
+    function prosesNilaiSiswa() {
+        let totalPerolehan = 0;
+        let totalMaxSkorUjian = 0;
+
+        konfigurasiSoal.forEach(soal => {
+            totalMaxSkorUjian += soal.maxSkor;
+
+            if (soal.tipe === 'PG' || soal.tipe === 'BS') {
+                let inputSiswa = jawabanSiswa[soal.nomor];
+                if (inputSiswa === soal.kunci) totalPerolehan += soal.maxSkor;
+            } else if (soal.tipe === 'PGK') {
+                let inputSiswa = jawabanSiswa[soal.nomor];
+                if (inputSiswa && inputSiswa.sort().join(',') === soal.kunci.sort().join(',')) {
+                    totalPerolehan += soal.maxSkor;
+                }
+            } else if (soal.tipe === 'MJ') {
+                for (let p = 1; p <= soal.ekstra.qty; p++) {
+                    let ansSiswa = document.getElementById(`ans-${soal.nomor}-${p}`).value;
+                    let kunciBenar = soal.kunci[p - 1];
+                    if (ansSiswa === kunciBenar) {
+                        totalPerolehan += soal.ekstra.skorPerBaris;
+                    }
+                }
+            } else if (soal.tipe === 'IS' || soal.tipe === 'UR') {
+                let inputSiswa = jawabanSiswa[soal.nomor];
+                totalPerolehan += (parseInt(inputSiswa) || 0);
+            }
+        });
+
+        let nilaiAkhir = totalMaxSkorUjian > 0 ? (totalPerolehan / totalMaxSkorUjian) * 100 : 0;
+
+        document.getElementById('res-nama').innerText = document.getElementById('siswa-nama').value || '-';
+        document.getElementById('res-absen').innerText = document.getElementById('siswa-absen').value || '-';
+        document.getElementById('res-skor-perolehan').innerText = totalPerolehan;
+        document.getElementById('res-skor-max').innerText = totalMaxSkorUjian;
+        document.getElementById('res-nilai-akhir').innerText = nilaiAkhir.toFixed(1);
+        
+        document.getElementById('result-box').style.display = 'block';
+        
+        setTimeout(() => {
+            document.getElementById('result-box').scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
+    }
+
+    function resetFormKoreksi() {
+        document.getElementById('siswa-nama').value = '';
+        document.getElementById('siswa-absen').value = '';
+        
+        document.getElementById('daftar-soal-koreksi').querySelectorAll('.btn-opt').forEach(b => {
+            b.classList.remove('selected', 'selected-multi');
+        });
+        
+        document.getElementById('daftar-soal-koreksi').querySelectorAll('select').forEach(s => {
+            s.value = '';
+        });
+
+        document.getElementById('result-box').style.display = 'none';
+        jawabanSiswa = {};
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function kembaliKeSetup() {
+        document.getElementById('step-2').classList.remove('active');
+        document.getElementById('step-1').classList.add('active');
+        document.getElementById('section-koreksi').classList.remove('active');
+        document.getElementById('section-setup').classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function tambahKeRiwayat() {
+        let nama = document.getElementById('siswa-nama').value.trim() || '_kosong_';
+        let kelas = document.getElementById('siswa-absen').value.trim() || '_kosong_';
+        let skor = document.getElementById('res-skor-perolehan').innerText;
+        let max = document.getElementById('res-skor-max').innerText;
+        let nilai = document.getElementById('res-nilai-akhir').innerText;
+
+        if (skor === "0" && max === "0") {
+            alert("Silakan, hitung nilai siswa terlebih dahulu sebelum menyimpan!");
+            return;
+        }
+
+        riwayatKoreksi.push({ nama, kelas, skor, max, nilai });
+        renderTabelRiwayat();
+        document.getElementById('riwayat-box').style.display = 'block';
+        alert(`Data nilai atas nama "${nama}" berhasil tersimpan!`);
+    }
+
+    function renderTabelRiwayat() {
+        let tbody = document.getElementById('body-riwayat');
+        tbody.innerHTML = '';
+        
+        riwayatKoreksi.forEach(data => {
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 12px 10px;">${data.kelas}</td>
+					<td style="padding: 12px 10px; font-weight: 500;">${data.nama}</td>
+                    <td style="padding: 12px 10px; text-align: center;">${data.skor}</td>
+                    <td style="padding: 12px 10px; text-align: center;">${data.max}</td>
+                    <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: #047857;">${data.nilai}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function unduhExcel() {
+        if (riwayatKoreksi.length === 0) return alert("Belum ada data nilai yang tersimpan!");
+
+        let csvContent = "\uFEFF"; 
+        csvContent += "No. Absen;Nama Lengkap;Skor Perolehan;Skor Maksimal;Nilai Akhir\r\n";
+
+        riwayatKoreksi.forEach(d => {
+            csvContent += `"${d.kelas}";"${d.nama}";${d.skor};${d.max};${d.nilai}\r\n`;
+        });
+
+        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        let url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Rekap_Nilai_Ujian_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function unduhPDF() {
+        if (riwayatKoreksi.length === 0) return alert("Belum ada data nilai di dalam rekap!");
+
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title></title>
+                <style>
+                    body { font-family: 'Inter', sans-serif; padding: 30px; color: #1e293b; }
+                    h2 { text-align: center; margin-bottom: 4px; color: #0f172a; }
+                    .meta { text-align: center; color: #64748b; font-size: 10px; margin-top: 30px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 14px; }
+                    th { background-color: #f8fafc; font-weight: 600; color: #334155; }
+                    .center { text-align: center; }
+                    .bold { font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <h2>REKAPITULASI HASIL PENILAIAN UJIAN</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No. Absen</th>
+                            <th>Nama Lengkap</th>
+                            <th class="center">Skor Perolehan</th>
+                            <th class="center">Skor Maksimal</th>
+                            <th class="center">Nilai Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${riwayatKoreksi.map(d => `
+                            <tr>
+                                <td class="center">${d.kelas}</td>
+                                <td>${d.nama}</td>
+                                <td class="center">${d.skor}</td>
+                                <td class="center">${d.max}</td>
+                                <td class="center bold" style="color:#047857;">${d.nilai}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+				<div class="meta">Dicetak pada tanggal: ${new Date().toLocaleDateString('id-ID')}<br>
+				E-Exam Corrector | Dede Ardi Hikmatulloh, S.Th.I | © 2025 – Portal PAI Dasar</div>
+                <script>
+                    window.onload = function() { window.print(); setTimeout(() => { window.close(); }, 100); }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    function cetakHasilSiswa() {
+        let nama = document.getElementById('siswa-nama').value.trim() || '_kosong_';
+        let kelas = document.getElementById('siswa-absen').value.trim() || '_kosong_';
+        let skor = document.getElementById('res-skor-perolehan').innerText;
+        let max = document.getElementById('res-skor-max').innerText;
+        let nilai = document.getElementById('res-nilai-akhir').innerText;
+
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title></title>
+                <style>
+                    body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 90vh; background: #fff; margin: 0; }
+                    .card { border: 3px double #cbd5e1; padding: 40px; border-radius: 12px; width: 450px; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+                    h2 { margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; text-align: center; font-size: 22px; }
+                    .row { display: flex; justify-content: space-between; margin: 14px 0; font-size: 15px; color: #334155; }
+                    .score-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; text-align: center; margin-top: 24px; }
+                    .score-big { font-size: 58px; font-weight: 800; color: #047857; margin: 5px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2>LEMBAR HASIL PENILAIAN UJIAN</h2>
+                    <div class="row"><strong>No. Absen:</strong> <span>${kelas}</span></div>
+					<div class="row"><strong>Nama Lengkap:</strong> <span>${nama}</span></div>
+                    <div class="row"><strong>Skor:</strong> <span>${skor} dari ${max}</span></div>
+                    <div class="score-box">
+                        <div style="font-size: 12px; color: #64748b; font-weight: 600; letter-spacing: 0.05em;">NILAI AKHIR:</div>
+                        <div class="score-big">${nilai}</div>
+                    </div>
+                </div>
+                <script>
+                    window.onload = function() { window.print(); setTimeout(() => { window.close(); }, 100); }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    function kosongkanRiwayat() {
+        if (confirm("Yakin ingin menghapus semua data yang tersimpan?")) {
+            riwayatKoreksi = [];
+            renderTabelRiwayat();
+            document.getElementById('riwayat-box').style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
